@@ -1,0 +1,10 @@
+PS D:\OneDrive\桌面> node -v
+v22.14.0
+
+PS D:\OneDrive\桌面> git --version
+git version 2.44.0.windows.1
+
+
+  VITE v7.3.1  ready in 880 ms
+
+  ➜  Local:   http://localhost:5173/
