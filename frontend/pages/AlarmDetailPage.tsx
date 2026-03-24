@@ -37,14 +37,15 @@ export default function AlarmDetailPage() {
   // ==================== 数据状态 ====================
   const [alarm, setAlarm] = useState<Alarm | null>(null); // 告警数据
   const [loading, setLoading] = useState(true); // 加载状态
-  const [saving, setSaving] = useState(false); // 保存状态
   const [uploading, setUploading] = useState(false); // 上传状态
   
   // ==================== 表单状态 ====================
   const [formData, setFormData] = useState({
     status: "", // 编辑后的状态
     assignee: "", // 编辑后的负责人
+    content: "", // 处理内容
   });
+  const [selectedFileName, setSelectedFileName] = useState(""); // 选中的文件名
 
   /**
    * 初始化：从后端加载单个告警数据
@@ -60,6 +61,7 @@ export default function AlarmDetailPage() {
         setFormData({
           status: data.status,
           assignee: data.assignee,
+          content: "",
         });
         setLoading(false);
       })
@@ -75,7 +77,6 @@ export default function AlarmDetailPage() {
    */
   const handleSave = async () => {
     if (!id) return;
-    setSaving(true);
     try {
       const res = await fetch(API.UPDATE_ALARM(id), {
         method: "PUT",
@@ -91,8 +92,6 @@ export default function AlarmDetailPage() {
     } catch (err) {
       console.error("Failed to save alarm:", err);
       alert("保存に失敗しました");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -110,6 +109,9 @@ export default function AlarmDetailPage() {
   const handleUploadEvidence = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !id) return;
+
+    // 更新文件名显示
+    setSelectedFileName(file.name);
 
     setUploading(true);
     try {
@@ -129,6 +131,8 @@ export default function AlarmDetailPage() {
       // 更新国警数据，包含新上传的图片路径
       setAlarm(data.alarm);
       alert("画像をアップロードしました");
+      // 清空文件名显示
+      setSelectedFileName("");
     } catch (err) {
       console.error("Failed to upload evidence:", err);
       alert("画像のアップロードに失敗しました");
@@ -184,176 +188,232 @@ export default function AlarmDetailPage() {
   if (!alarm) return <div style={{ padding: 20 }}>警報が見つかりません</div>;
 
   return (
-    <div style={{ padding: 20, maxWidth: 900 }}>
-      <button onClick={() => navigate("/alarms")} style={{ marginBottom: 20 }}>
-        ← 戻る
-      </button>
+    <div style={{ width: "100%", minHeight: "100vh", background: "#f5f5f5", display: "flex", flexDirection: "column", alignItems: "center", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 700 }}>
+        <button 
+          onClick={() => navigate("/alarms")} 
+          style={{ 
+            marginBottom: 20, 
+            padding: "10px 15px",
+            background: "#888888",
+            color: "white",
+            border: "none",
+            borderRadius: 4,
+            cursor: "pointer",
+            fontSize: 14,
+            fontWeight: "bold"
+          }}
+        >
+          ← キャンセルして戻る
+        </button>
 
-      <h1>警報詳細</h1>
+      {/* 标题区域 */}
+      <div style={{ marginBottom: 30, borderBottom: "3px solid #007bff", paddingBottom: 15 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+          <h1 style={{ margin: 0, fontSize: 24 }}>🚨 警報詳細</h1>
+          <span
+            style={{
+              display: "inline-block",
+              padding: "8px 16px",
+              background: alarm.level === "高" ? "#c9302c" : alarm.level === "警告" ? "#d9534f" : "#f0ad4e",
+              color: "white",
+              borderRadius: 4,
+              fontWeight: "bold",
+              fontSize: 14,
+            }}
+          >
+            {alarm.level === "高" ? "危険" : alarm.level === "警告" ? "警告" : "注意"}
+          </span>
+        </div>
+      </div>
 
       {/* 基本情報 */}
       <div style={{ marginBottom: 30, padding: 15, backgroundColor: "#f5f5f5", borderRadius: 4 }}>
         <h2 style={{ marginTop: 0 }}>基本情報</h2>
         <div style={{ marginBottom: 10, lineHeight: 2 }}>
-          <div><strong>ID:</strong> {alarm.id}</div>
+          <div><strong>対象設備:</strong> {alarm.equipment}</div>
           <div><strong>発生日時:</strong> {alarm.time}</div>
-          <div><strong>レベル:</strong> {alarm.level}</div>
-          <div><strong>設備名:</strong> {alarm.equipment}</div>
-          <div><strong>確信度:</strong> {alarm.confidence}%</div>
+          <div><strong>AI確信度:</strong> {alarm.confidence}%</div>
         </div>
       </div>
 
-      {/* 編集フォーム */}
-      <div style={{ marginBottom: 30, padding: 15, backgroundColor: "#fffacd", borderRadius: 4 }}>
-        <h2 style={{ marginTop: 0 }}>編集</h2>
-        <div style={{ marginBottom: 15 }}>
-          <label>
-            <div><strong>ステータス:</strong></div>
-            <select
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value })
-              }
-              style={{ padding: 8, width: 200, fontSize: 14 }}
-            >
-              <option value="未対応">未対応</option>
-              <option value="対応中">対応中</option>
-              <option value="完了">完了</option>
-            </select>
-          </label>
+      {/* Liquid AI 推荐处理建议 */}
+      <div style={{ 
+        marginBottom: 30, 
+        padding: 15, 
+        backgroundColor: "#e7f3ff", 
+        borderRadius: 4,
+        borderLeft: "4px solid #007bff"
+      }}>
+        <div style={{ color: "#007bff", fontWeight: "bold", marginBottom: 8 }}>
+          💡 Liquid AI推奨対処方法
         </div>
-
-        <div style={{ marginBottom: 15 }}>
-          <label>
-            <div><strong>担当者:</strong></div>
-            <input
-              type="text"
-              value={formData.assignee}
-              onChange={(e) =>
-                setFormData({ ...formData, assignee: e.target.value })
-              }
-              style={{ padding: 8, width: 200, fontSize: 14 }}
-            />
-          </label>
+        <div style={{ color: "#333" }}>
+          週末にベアリングのグリスアップを推奨
         </div>
-
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            cursor: saving ? "not-allowed" : "pointer",
-            borderRadius: 4,
-            fontSize: 14,
-          }}
-        >
-          {saving ? "保存中..." : "保存"}
-        </button>
       </div>
 
-      {/* [关键] エビデンス（証拠/Evidence）セクション */}
-      <div style={{ marginBottom: 30, padding: 15, backgroundColor: "#fff0f5", borderRadius: 4 }}>
-        <h2 style={{ marginTop: 0 }}>🔍 エビデンス（証拠画像）</h2>
-        
-        {/* ファイルアップロード */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ marginBottom: 10 }}>
-            <strong>画像をアップロード:</strong>
+      {/* 統合フォーム（対応入力エリア + エビデンス）*/}
+      <div style={{ marginBottom: 30, padding: 20, backgroundColor: "#f5f5f5", borderRadius: 4, border: "2px dashed #ddd" }}>
+        {/* 対応入力エリア */}
+        <h2 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          🖊️ 対応入力エリア
+        </h2>
+        <div style={{ marginBottom: 15, display: "flex", gap: 20, alignItems: "center" }}>
+          <div style={{ width: 100, fontWeight: "bold" }}>対処状態:</div>
+          <select
+            value={formData.status}
+            onChange={(e) =>
+              setFormData({ ...formData, status: e.target.value })
+            }
+            style={{ padding: 8, flex: 1, fontSize: 14, border: "1px solid #ddd", borderRadius: 4 }}
+          >
+            <option value="未対応">未対応</option>
+            <option value="対応中">対応中</option>
+            <option value="完了">完了</option>
+          </select>
+        </div>
+
+        <div style={{ marginBottom: 15, display: "flex", gap: 20, alignItems: "flex-start" }}>
+          <div style={{ width: 100, fontWeight: "bold", paddingTop: 8 }}>担当者:</div>
+          <input
+            type="text"
+            value={formData.assignee}
+            onChange={(e) =>
+              setFormData({ ...formData, assignee: e.target.value })
+            }
+            style={{ padding: 8, flex: 1, fontSize: 14, border: "1px solid #ddd", borderRadius: 4 }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 15, display: "flex", gap: 20, alignItems: "flex-start" }}>
+          <div style={{ width: 100, fontWeight: "bold", paddingTop: 8 }}>対処内容:</div>
+          <textarea
+            value={formData.content}
+            onChange={(e) =>
+              setFormData({ ...formData, content: e.target.value })
+            }
+            style={{ 
+              padding: 8, 
+              flex: 1, 
+              minHeight: 80,
+              fontSize: 14,
+              fontFamily: "Arial, sans-serif",
+              border: "1px solid #ddd",
+              borderRadius: 4
+            }}
+            placeholder="対処内容を入力してください"
+          />
+        </div>
+
+        {/* エビデンス セクション */}
+        <div style={{ marginTop: 30, paddingTop: 20, borderTop: "1px solid #ddd", display: "flex", gap: 20, alignItems: "flex-start" }}>
+          <div style={{ fontWeight: "bold", fontSize: 16, whiteSpace: "nowrap", marginTop: 5 }}>
+            🔍 エビデンス：
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          
+          <div style={{ flex: 1 }}>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={handleUploadEvidence}
               disabled={uploading}
-              style={{ flex: 1 }}
+              style={{ display: "none" }}
             />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: uploading ? "#ccc" : "#2196F3",
-                color: "white",
-                border: "none",
-                cursor: uploading ? "not-allowed" : "pointer",
+            
+            {/* 第一行：選択ボタン + ファイル状態表示 */}
+            <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#888888",
+                  color: "white",
+                  border: "none",
+                  cursor: uploading ? "not-allowed" : "pointer",
+                  borderRadius: 4,
+                  fontWeight: "bold",
+                  fontSize: 14,
+                  whiteSpace: "nowrap"
+                }}
+              >
+                {uploading ? "アップロード中..." : "選択"}
+              </button>
+              <div style={{ 
+                color: selectedFileName ? "#333" : "#999",
+                fontStyle: selectedFileName ? "normal" : "italic",
+                fontSize: 14
+              }}>
+                {selectedFileName ? selectedFileName : "ファイルが選択されていません"}
+              </div>
+            </div>
+            
+            {/* 第二行：ファイル入力表示 + 削除ボタン */}
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <div style={{ 
+                flex: 1,
+                padding: 8, 
+                border: "1px solid #ddd", 
                 borderRadius: 4,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {uploading ? "アップロード中..." : "選択"}
-            </button>
+                backgroundColor: "#f9f9f9",
+                minHeight: "20px",
+                color: "#999",
+                fontSize: 14
+              }}>
+                &nbsp;
+              </div>
+              <button
+                onClick={() => {
+                  if (alarm.evidence && alarm.evidence.length > 0) {
+                    const imagePath = alarm.evidence[0];
+                    handleDeleteEvidence(imagePath);
+                  }
+                }}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#f44336",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                  borderRadius: 4,
+                  fontWeight: "bold",
+                  fontSize: 14,
+                  whiteSpace: "nowrap"
+                }}
+              >
+                削除
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* アップロード済みの画像表示 */}
-        <div>
-          <div style={{ marginBottom: 10 }}>
-            <strong>アップロード済み画像: {alarm.evidence?.length || 0} 件</strong>
-          </div>
-          {alarm.evidence && alarm.evidence.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                gap: 15,
-              }}
-            >
-              {alarm.evidence.map((imagePath, index) => (
-                <div
-                  key={index}
-                  style={{
-                    border: "1px solid #ddd",
-                    borderRadius: 4,
-                    overflow: "hidden",
-                    backgroundColor: "white",
-                    display: "flex",
-                    flexDirection: "column",
-                  }}
-                >
-                  <img
-                    src={`http://localhost:3000${imagePath}`}
-                    alt={`Evidence ${index + 1}`}
-                    style={{
-                      width: "100%",
-                      height: 150,
-                      objectFit: "cover",
-                      display: "block",
-                    }}
-                  />
-                  <div style={{ padding: 10, flex: 1 }}>
-                    <div style={{ fontSize: 12, color: "#666", marginBottom: 8, wordBreak: "break-all" }}>
-                      {imagePath.split("/").pop()}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteEvidence(imagePath)}
-                      style={{
-                        width: "100%",
-                        padding: "6px 12px",
-                        backgroundColor: "#f44336",
-                        color: "white",
-                        border: "none",
-                        borderRadius: 3,
-                        cursor: "pointer",
-                        fontSize: 12,
-                      }}
-                    >
-                      削除
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ color: "#999", fontStyle: "italic" }}>
-              アップロードされた画像はありません
-            </div>
-          )}
-        </div>
+        {/* 文件名显示已在输入框内，无需图片网格显示 */}
+      </div>
+
+      {/* 最后的保存返回按钮 */}
+      <div style={{ textAlign: "center", marginTop: 30 }}>
+        <button
+          onClick={() => {
+            handleSave();
+            setTimeout(() => navigate("/alarms"), 500);
+          }}
+          style={{
+            padding: "15px 40px",
+            backgroundColor: "#4CAF50",
+            color: "white",
+            border: "none",
+            cursor: "pointer",
+            borderRadius: 4,
+            fontSize: 16,
+            fontWeight: "bold",
+            width: "100%"
+          }}
+        >
+          💾 内容を保存して戻る
+        </button>
+      </div>
       </div>
     </div>
   );

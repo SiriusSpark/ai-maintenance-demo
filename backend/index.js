@@ -77,7 +77,7 @@ const mockAlarms = [
     equipment: "冷却ポンプ1号",
     confidence: 92,
     status: "未対応",
-    assignee: "未設定",
+    assignee: "未定",
     evidence: [], // [关键] 証拠画像パス配列（初期は空）
   },
   {
@@ -87,19 +87,60 @@ const mockAlarms = [
     equipment: "搬送ラインB",
     confidence: 71,
     status: "対応中",
-    assignee: "王",
+    assignee: "田中",
     evidence: [], // [关键] 証拠画像パス配列（初期は空）
   },
   {
     id: "A003",
     time: "2026-03-04 14:22",
-    level: "高",
+    level: "注意",
     equipment: "加熱炉A",
-    confidence: 88,
-    status: "解決済",
-    assignee: "李",
+    confidence: 89,
+    status: "完了",
+    assignee: "佐藤",
     evidence: [], // [关键] 証拠画像パス配列（初期は空）
   },
+  {
+    id: "A004",
+    time: "2026-03-03 09:45",
+    level: "警告",
+    equipment: "プレス機械1号",
+    confidence: 85,
+    status: "未対応",
+    assignee: "未定",
+    evidence: [], // [关键] 証拠画像パス配列（初期は空）
+  },
+  {
+    id: "A005",
+    time: "2026-03-02 16:20",
+    level: "注意",
+    equipment: "溶接ロボット",
+    confidence: 76,
+    status: "対応中",
+    assignee: "鈴木",
+    evidence: [], // [关键] 証拠画像パス配列（初期は空）
+  },
+  {
+    id: "A006",
+    time: "2026-03-01 11:30",
+    level: "高",
+    equipment: "冷凍庫システムB",
+    confidence: 95,
+    status: "未対応",
+    assignee: "未定",
+    evidence: [], // [关键] 証拠画像パス配列（初期は空）
+  },
+  {
+    id: "A007",
+    time: "2026-02-28 13:15",
+    level: "注意",
+    equipment: "コンベアベルト",
+    confidence: 68,
+    status: "完了",
+    assignee: "山田",
+    evidence: [], // [关键] 証拠画像パス配列（初期は空）
+  },
+  
 ];
 
 /**

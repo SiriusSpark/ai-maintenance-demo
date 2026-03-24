@@ -130,7 +130,7 @@ export default function AlarmListPage() {
 
   return (
     <div style={{ padding: 20, minHeight: "100vh", background: "#f5f5f5" }}>
-      <h1 style={{ marginBottom: 20 }}>🔧 設備異常一覧</h1>
+      <h1 style={{ marginBottom: 20,fontSize:24 }}>🔧 設備異常一覧</h1>
 
       {/* 筛选区域 */}
       <div
@@ -148,7 +148,7 @@ export default function AlarmListPage() {
           </label>
           <input
             type="text"
-            placeholder="例: 冷却ポンプ"
+            placeholder="例: 溶解口ポット"
             value={equipmentFilter}
             onChange={(e) => setEquipmentFilter(e.target.value)}
             style={{
