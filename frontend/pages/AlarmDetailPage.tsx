@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { API } from "../src/api";
 
 type Alarm = {
   id: string;
@@ -22,10 +23,11 @@ export default function AlarmDetailPage() {
     assignee: "",
   });
 
-  // Load alarm data from backend
+  // [关键] 从后端API获取单个告警详情
+  // GET /api/alarms/:id 返回指定告警的所有信息
   useEffect(() => {
     if (!id) return;
-    fetch(`http://localhost:3000/api/alarms/${id}`)
+    fetch(API.GET_ALARM_DETAIL(id))
       .then((res) => res.json())
       .then((data) => {
         setAlarm(data);
@@ -41,11 +43,13 @@ export default function AlarmDetailPage() {
       });
   }, [id]);
 
+  // [关键] 保存告警修改
+  // PUT /api/alarms/:id 更新状态和负责人
   const handleSave = async () => {
     if (!id) return;
     setSaving(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/alarms/${id}`, {
+      const res = await fetch(API.UPDATE_ALARM(id), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -74,6 +78,8 @@ export default function AlarmDetailPage() {
       </button>
 
       <h1>警報詳細</h1>
+
+
 
       <div style={{ marginBottom: 20, lineHeight: 2 }}>
         <div><strong>ID:</strong> {alarm.id}</div>

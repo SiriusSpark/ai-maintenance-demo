@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { API } from "../src/api";
 
 type Alarm = {
   id: string;
@@ -14,9 +15,10 @@ type Alarm = {
 export default function AlarmListPage() {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
 
-  // Load data from backend
+  // [关键] 从后端API获取告警列表数据
+  // GET /api/alarms 返回所有告警信息
   useEffect(() => {
-    fetch("http://localhost:3000/api/alarms")
+    fetch(API.GET_ALARMS)
       .then((res) => res.json())
       .then((data) => {
         setAlarms(data);

@@ -7,7 +7,8 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-// Mock data
+// [关键] 数据存储：当前使用内存数组，应用重启后数据丢失
+// 生产环境应替换为真实数据库（MongoDB / PostgreSQL 等）
 const mockAlarms = [
   {
     id: "A001",
@@ -38,12 +39,12 @@ const mockAlarms = [
   },
 ];
 
-// API: Get all alarms
+// [API] GET /api/alarms - 获取所有告警列表
 app.get('/api/alarms', (req, res) => {
   res.json(mockAlarms);
 });
 
-// API: Get alarm by id
+// [API] GET /api/alarms/:id - 获取单个告警详情
 app.get('/api/alarms/:id', (req, res) => {
   const alarm = mockAlarms.find(a => a.id === req.params.id);
   if (!alarm) {
@@ -52,7 +53,7 @@ app.get('/api/alarms/:id', (req, res) => {
   res.json(alarm);
 });
 
-// API: Update alarm
+// [API] PUT /api/alarms/:id - 更新告警信息（状态、负责人）
 app.put('/api/alarms/:id', (req, res) => {
   const alarm = mockAlarms.find(a => a.id === req.params.id);
   if (!alarm) {
